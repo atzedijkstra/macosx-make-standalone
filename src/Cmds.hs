@@ -7,6 +7,9 @@ module Cmds
   , cmdOTool
   , cmdCP
   , cmdChmod
+  , cmdMkdir
+  , cmdInstallNameToolId
+  , cmdInstallNameToolChange
   ) where
 
 -------------------------------------------------------------------------
@@ -51,14 +54,21 @@ showCmdSpec (RawCommand f as) = concat $ intersperse " " (f:as)
 cmdRunPlain :: Opts -> CreateProcess -> IO ()
 cmdRunPlain opts p = do
   when (opts ^. optVerbose) (putStrLn (showCmdSpec $ cmdspec p))
-  createProcess p
+  (_, _, _, phandle) <-createProcess p
+  waitForProcess phandle
   return ()
 
 cmdRunOutputPipe :: Opts -> CreateProcess -> IO Handle
 cmdRunOutputPipe opts p = do
   when (opts ^. optVerbose) (putStrLn (showCmdSpec $ cmdspec p))
-  (_, Just hout, _, _) <- createProcess (p {std_out = CreatePipe})
+  (_, Just hout, _, phandle) <- createProcess (p {std_out = CreatePipe})
+  waitForProcess phandle
   return hout
+
+cmdRun :: String -> String -> [FilePath] -> StRun ()
+cmdRun c m fs = do
+  opts <- access opts
+  liftIO $ cmdRunPlain opts $ proc c (m : fs)
 
 -------------------------------------------------------------------------
 -- otool
@@ -98,15 +108,35 @@ cmdOTool f = do
 -------------------------------------------------------------------------
 
 cmdCP :: String -> FilePath -> FilePath -> StRun ()
-cmdCP o fFr fTo = do
-  opts <- access opts
-  liftIO $ cmdRunPlain opts $ proc "cp" [o, fFr, fTo]
+cmdCP o fFr fTo = cmdRun "cp" o [fFr, fTo]
 
 -------------------------------------------------------------------------
 -- chmod
 -------------------------------------------------------------------------
 
 cmdChmod :: String -> FilePath -> StRun ()
-cmdChmod m f = do
-  opts <- access opts
-  liftIO $ cmdRunPlain opts $ proc "chmod" [m, f]
+cmdChmod o f = cmdRun "chmod" o [f]
+
+-------------------------------------------------------------------------
+-- mkdir
+-------------------------------------------------------------------------
+
+cmdMkdir :: String -> FilePath -> StRun ()
+cmdMkdir o f = cmdRun "mkdir" o [f]
+
+-------------------------------------------------------------------------
+-- install_name_tool
+-------------------------------------------------------------------------
+
+cmdInstallNameToolChange :: FilePath -> FilePath -> FilePath -> StRun ()
+cmdInstallNameToolChange fIn fFr fTo = cmdRun "install_name_tool" "-change" [fFr, fTo, fIn]
+
+cmdInstallNameToolId :: FilePath -> FilePath -> StRun ()
+cmdInstallNameToolId fIn fTo = cmdRun "install_name_tool" "-id" [fTo, fIn]
+
+{-
+    install_name_tool -id @executable_path/../libs/libwx_osx_cocoau_xrc-2.9.4.0.0.dylib  ./Dazzle.app/Contents/libs/libwx_osx_cocoau_xrc-2.9.4.0.0.dylib 
+
+* Fixing dependencies on ./Dazzle.app/Contents/libs/libwx_osx_cocoau_xrc-2.9.4.0.0.dylib 
+    install_name_tool -change /Volumes/Work/.cabal/lib/wxc-0.90.0.4/ghc-7.4.1/libwxc.dylib  @executable_path/../libs/libwxc.dylib  ./Dazzle.app/Contents/libs/libwx_osx_cocoau_xrc-2.9.4.0.0.dylib 
+-}

@@ -31,7 +31,7 @@ import           Data.Typeable
 -- import           System.Environment
 -- import           System.IO
 -- import           System.Exit
--- import           System.FilePath
+import           System.FilePath
 -- import           System.Directory
 -- import           System.Cmd
 -- import           System.Process
@@ -46,19 +46,18 @@ import           Cmds
 -------------------------------------------------------------------------
 
 data PlanCmd
-  = PlanCmd_CP							-- ^ Copy file
-      { _pcFrom		:: FilePath
-      , _pcTo		:: FilePath
+  = PlanCmd_CP                          -- ^ Copy file
+      { _pcFrom     :: FilePath
+      , _pcTo       :: FilePath
       }
-  | PlanCmd_ModfRef						-- ^ Modify ref in file
-      { _pcInFile	:: FilePath
-      , _pcFrom		:: FilePath
-      , _pcTo		:: FilePath
+  | PlanCmd_ModfRef                     -- ^ Modify ref in file
+      { _pcInFile   :: FilePath
+      , _pcFrom     :: FilePath
+      , _pcTo       :: FilePath
       }
-  | PlanCmd_IntlRename					-- ^ Modify internal name in file
-      { _pcInFile	:: FilePath
-      , _pcFrom		:: FilePath
-      , _pcTo		:: FilePath
+  | PlanCmd_IntlRename                  -- ^ Modify internal name in file
+      { _pcInFile   :: FilePath
+      , _pcTo       :: FilePath
       }
   deriving (Show,Typeable)
 
@@ -72,9 +71,14 @@ type Plan = Seq PlanCmd
 
 planCmdExec :: PlanCmd -> StRun ()
 planCmdExec pcmd = case pcmd of
-  PlanCmd_CP fFr fTo -> do cmdCP "-f" fFr fTo
-                           cmdChmod "+w" fTo
-  _ -> return ()
+  PlanCmd_CP fFr fTo -> do
+    cmdMkdir "-p" $ takeDirectory fTo
+    cmdCP "-f" fFr fTo
+    cmdChmod "+w" fTo
+  PlanCmd_ModfRef fIn fFr fTo -> do
+    cmdInstallNameToolChange fIn fFr fTo
+  PlanCmd_IntlRename fIn fTo -> do
+    cmdInstallNameToolId fIn fTo
 
 -------------------------------------------------------------------------
 -- Seq extension

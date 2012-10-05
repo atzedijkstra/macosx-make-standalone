@@ -5,6 +5,7 @@ module Opts
   
   , optImmediateCommands
   , optVerbose
+  , optDebug
   , optProgName
   , optExcludePrefixes
   , optIncludeExtensions
@@ -20,6 +21,9 @@ module Opts
 -------------------------------------------------------------------------
 -- Imports
 -------------------------------------------------------------------------
+
+import           Prelude hiding ((.))
+import           Control.Category
 
 import           Data.Lens.Common
 import           Data.Lens.Template
@@ -43,6 +47,7 @@ data ImmediateCommand
 data Opts 
   = Opts
       { _optVerbose					::	Bool					-- ^ be verbose
+      , _optDebug					::	Bool					-- ^ dump debug info
       , _optImmediateCommands		::	[ImmediateCommand]		-- ^ e.g. help
       , _optProgName				::	String					-- ^ the name of this program
       , _optExcludePrefixes			::	[FilePath]				-- ^ prefixes of locations which may not be copied
@@ -60,6 +65,7 @@ makeLens ''Opts
 defaultOpts 
   = Opts
       { _optVerbose					=	False
+      , _optDebug					=	False
       , _optImmediateCommands		=	[]
       , _optProgName				=	"??"
       , _optExcludePrefixes			=   [ "/usr/lib" 
@@ -81,5 +87,7 @@ cmdLineOpts
           "output this help"
      ,  Option "v"  ["verbose"]            			(NoArg $ optVerbose ^= True)
           "be verbose"
+     ,  Option "d"  ["debug"]            			(NoArg $ (optVerbose ^= True) . (optDebug ^= True))
+          "dump debug info"
      ]
 

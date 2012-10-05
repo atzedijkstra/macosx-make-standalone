@@ -66,9 +66,10 @@ doIt opts fnmApp = do
   fnm = fpathOfExec opts fnmApp
   thework = do
     ldep <- otoolGraphVisit2LibDepGraph fnm
-    when (opts ^. optVerbose) (liftIO $ putStrLn (show ldep))
-    let plan = ldepGraph2Plan opts fnmApp ldep
-    when (opts ^. optVerbose) (liftIO $ forM_ (seqToList plan) (putStrLn . show))
+    when (opts ^. optDebug) (liftIO $ putStrLn (show ldep))
+    let plan = seqToList $ ldepGraph2Plan opts fnmApp ldep
+    when (opts ^. optDebug) (liftIO $ forM_ plan (putStrLn . show))
+    forM_ plan planCmdExec
     return ()
     -- f <- srFreshTmpName
     -- liftIO $ putStrLn f
@@ -117,23 +118,30 @@ ldepGraph2Plan opts fnmApp ldep =
     [ PlanCmd_CP o n | (n,((o:_),_)) <- Map.toList filesToCopy ]
   Seq.><
     foldr (Seq.><) Seq.empty
-      [ Seq.fromList $
-          PlanCmd_IntlRename n o ri
-          : [ PlanCmd_ModfRef n u rr
-            | u <- maybe [] (^. libUses) $ Map.lookup o $ ldep ^. ldepGraph
-            , let u2 = ldepResolveSymlink ldep u
-                  rr = Map.findWithDefault u2 u2 filesToCopyRev
-            ]
+      [ Seq.fromList $ PlanCmd_IntlRename n ri : mkModfRef filesToCopy n o
       | (n,((o:_),ri)) <- Map.toList filesToCopy
       ]
+  Seq.><
+    foldr (Seq.><) Seq.empty
+      [ Seq.fromList $ mkModfRef filesToCopy o o
+      | (_,((o:_),_)) <- Map.toList filesRoot
+      ]
  where
-  filesToCopy = Map.fromListWith (\(l1,r1) (l2,_) -> (l1++l2,r1))
-    [ (n, ([l'],r))
-    | l <- Set.toList $ Set.delete (ldep ^. ldepRoot) $ Map.keysSet $ ldep ^. ldepGraph
-    , let l' = l -- ldepResolveSymlink ldep l
-          (n,r) = fpathOfNewLib opts fnmApp l'
+  filesToCopy = mkFilesToCopyMp (Set.delete (ldep ^. ldepRoot) $ Map.keysSet $ ldep ^. ldepGraph)
+  filesRoot   = Map.fromList [ (o,([o],o)) | o <- [ldep ^. ldepRoot] ]
+  mkFilesToCopyMp fs = Map.fromListWith (\(l1,r1) (l2,_) -> (l1++l2,r1))
+    [ (n, ([l],r))
+    | l <- Set.toList fs
+    , let (n,r) = fpathOfNewLib opts fnmApp l
     ]
-  filesToCopyRev = Map.fromList [ (o,r) | (n,(os,r)) <- Map.toList filesToCopy, o <- os ]
+  mkFilesToCopyMpRev fMp = Map.fromList [ (o,r) | (n,(os,r)) <- Map.toList fMp, o <- os ]
+  mkModfRef fMp n o =
+    [ PlanCmd_ModfRef n u rr
+    | u <- maybe [] (^. libUses) $ Map.lookup o $ ldep ^. ldepGraph
+    , let u2 = ldepResolveSymlink ldep u
+          rr = Map.findWithDefault u2 u2 fMpRev
+    ]
+    where fMpRev = mkFilesToCopyMpRev fMp
 
 -------------------------------------------------------------------------
 -- File name manipulation

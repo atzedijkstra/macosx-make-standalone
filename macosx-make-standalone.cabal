@@ -3,14 +3,19 @@ Version:             0.1
 Synopsis:            Make a macosx app standalone deployable
 Description:         Make a macosx app standalone by bundling all dylibs into it.
 License:             BSD3
+license-file:		 LICENSE
 Author:              Atze Dijkstra
 Maintainer:          atze@uu.nl
-Homepage:            https://github.com/atzedijkstra
-Bug-Reports:         https://github.com/atzedijkstra/issues
+Homepage:            https://github.com/atzedijkstra/macosx-make-standalone
+Bug-Reports:         https://github.com/atzedijkstra/macosx-make-standalone/issues
 Copyright:           2012 Utrecht University
 Category:            Development
 Build-type:          Simple
 Cabal-version:       >=1.6
+source-repository head
+  type:        git
+  location:    git://github.com/atzedijkstra/macosx-make-standalone.git
+
 
 Executable macosx-make-standalone
   HS-Source-Dirs: src
