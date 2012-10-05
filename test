@@ -1,0 +1,6 @@
+#!/bin/sh
+
+m=dist/build/macosx-make-standalone/macosx-make-standalone
+
+${m} /Volumes/Work/Programming/project.bayes.dazzle/trunk/Dazzle/Dazzle.app -v
+#${m} ${m}
