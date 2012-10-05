@@ -21,15 +21,15 @@ Manual
 ======
 
 Invocation:
-  macosx-make-standalone <mac app bundle>
+  macosx-make-standalone `mac app bundle`
 
 Options:
 - see option --help, currently only verbosity and debug info dump
 
 What is does, restrictions:
-- Copies all non /usr/lib .dylib files into <mac app bundle>/Contents/lib/
-- Changes all references to the old library into refs to the copied libraries, in the <mac app bundle>/Contents/MacOS/<app name> as well as the copied libraries
-- Resolves symbolic links of referenced libraries (thus not for <mac app bundle>)
+- Copies all non /usr/lib `.dylib` files into `mac app bundle/Contents/lib/`
+- Changes all references to the old library into refs to the copied libraries, in the `mac app bundle/Contents/MacOS/app name` as well as the copied libraries
+- Resolves symbolic links of referenced libraries (thus not for `mac app bundle`)
 - In case of duplicate libraries ending up with the same copy name, an arbitrary one is picked (no problem if they are equal)
 - Can only be run once, i.e. is not idempotent
 
