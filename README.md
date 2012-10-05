@@ -23,6 +23,9 @@ Manual
 Invocation:
   macosx-make-standalone <mac app bundle>
 
+Options:
+- see option --help, currently only verbosity and debug info dump
+
 What is does, restrictions:
 - Copies all non /usr/lib .dylib files into <mac app bundle>/Contents/lib/
 - Changes all references to the old library into refs to the copied libraries, in the <mac app bundle>/Contents/MacOS/<app name> as well as the copied libraries

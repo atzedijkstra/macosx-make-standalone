@@ -28,10 +28,13 @@ Executable macosx-make-standalone
     data-lens-template >= 2 && < 3,
     mtl >= 2 && < 3,
     containers >= 0.4 && < 0.5,
-    transformers,
-    directory,
-    filepath,
-    process,
-    unix,
-    deepseq,
+    transformers >= 0.3 && < 0.4,
+    directory >= 1 && < 2,
+    filepath >= 1 && < 2,
+    process >= 1 && < 2,
+    unix >= 2 && < 3,
+    deepseq >= 1 && < 2,
     graph-visit >= 0.1.0.1 && < 0.2
+
+  Other-modules:
+    Opts, State, LibDepGraph, Plan, Cmds
